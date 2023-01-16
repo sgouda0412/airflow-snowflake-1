@@ -14,7 +14,7 @@ from json import dumps
 import logging
 #from pymongo import MongoClient
 
-dag_path = os.getcwd()
+dag_path = '/opt/airflow/dags' #os.getcwd()
 
 def data_cleaning():
     df = pd.read_csv(f'{dag_path}/tiktok_google_play_reviews.csv')
@@ -46,14 +46,16 @@ default_args = {
 dag = DAG(  
     dag_id="airflow_project",
     default_args=default_args,
+    description='Data pipeline dag',
+    doc_md='*DAG which reads data, transforms it and loads it into the db*',
     schedule_interval=None,
     start_date=datetime.now(),
-    catchup=False
+    catchup=False,
 )
     
 sensor = FileSensor(
     task_id='file_sensor',
-    poke_interval=1,
+    poke_interval=30,
     mode='reschedule', # to avoid deadlock
     filepath=f'{dag_path}/tiktok_google_play_reviews.csv'
 )

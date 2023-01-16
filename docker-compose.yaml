@@ -58,7 +58,7 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
-    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
+    # _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-numpy pandas pymongo}
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
@@ -142,6 +142,8 @@ services:
       # Required to handle warm shutdown of the celery workers properly
       # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
       DUMB_INIT_SETSID: "0"
+      _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-numpy pandas pymongo}
+
     restart: always
     depends_on:
       <<: *airflow-common-depends-on
@@ -268,13 +270,13 @@ services:
       airflow-init:
         condition: service_completed_successfully
   
-  python_app:
-    image: python
-    build:
-      context: ./ # use this folder as main !can't use ./.. to leave this filepath
-      dockerfile: ./src/Dockerfile # specifying the python Dockerfile dir
-    volumes:
-      - ./requirements.txt:/requirements.txt
+  # python_app:
+  #   image: python
+  #   build:
+  #     context: ./ # use this folder as main !can't use ./.. to leave this filepath
+  #     dockerfile: ./src/Dockerfile # specifying the python Dockerfile dir
+  #   # volumes:
+  #   #   - ./requirements.txt:/requirements.txt
 
   mongodb:
     image : mongo
@@ -290,4 +292,4 @@ services:
 
 volumes:
   postgres-db-volume:
-  mongodb_data_container:
+  # mongodb_data_container:
