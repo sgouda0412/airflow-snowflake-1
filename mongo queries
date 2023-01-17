@@ -1,0 +1,6 @@
+// query1: Топ-5 известных комментариев;
+db.reviews.find().sort({thumbsUpCount:-1}).limit(5)
+// query2: Все записи, где длина поля “content” составляет менее 5 символов;
+db.reviews.find({"content": {"$exists": true }, "$expr": {"$lt": [{"$strLenCP":"$content"}, 5]}})
+// query3: Средний рейтинг по каждому дню (результат должен быть в виде timestamp type).
+db.reviews.aggregate({ $group:{ _id:{ $dateToString:{format: "%Y-%m-%d", date: "$at"}}, rating: { $avg: "$score" }}})

@@ -7,7 +7,7 @@ initdb.py
 secrets.py
 
 PD.ipynb
-proccessed_data.csv
+processed_data.csv
 # Airflow sqlite databases
 airflow.db
 unittests.db

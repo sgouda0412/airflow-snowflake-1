@@ -283,15 +283,15 @@ services:
 
   mongodb:
     image : mongo
-    command: [--auth]
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: root
-      MONGO_INITDB_DATABASE: reviews
+    # command: [--auth]
+    #environment:
+      # MONGO_INITDB_ROOT_USERNAME: root
+      # MONGO_INITDB_ROOT_PASSWORD: root
+      # MONGO_INITDB_DATABASE: reviews
     container_name: mongodb
     volumes:
-      - /home/barry/mongodb/database:/data/db
-      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
+      - /home/andre/mongodb/data:/data/db
+      # - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
     ports:
       - 27017:27017
     restart: unless-stopped
