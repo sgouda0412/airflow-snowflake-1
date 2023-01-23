@@ -17,6 +17,9 @@ Use the following username and password
 user: airflow
 password: airflow
 
+<h2>Snowflake</h2>
+Before executing the dags, you should create a warehouse with the name 'MY_WH', database with the name 'MY_DB' and lastly the schema named 'MY_SCHEMA'.
+
 <h2>Connections</h2>
 Add the following connections:
 
