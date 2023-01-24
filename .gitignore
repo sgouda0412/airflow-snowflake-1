@@ -8,6 +8,8 @@ secrets.py
 763K_plus_IOS_Apps_Info.csv
 connector.py
 test.py
+/info/
+/objects/
 
 PD.ipynb
 processed_data.csv
