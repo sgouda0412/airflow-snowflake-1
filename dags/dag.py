@@ -15,15 +15,14 @@ import logging
 from airflow.utils.task_group import TaskGroup
 from snowflake.connector.pandas_tools import write_pandas
 import snowflake.connector
+from dotenv import load_dotenv
+load_dotenv()
 
 dag_path = '/opt/airflow/dags' #os.getcwd()
 
-# password = Variable.get("PASSWORD")
-# user = Variable.get("USER")
-# account = Variable.get("ACCOUNT")
-user='andrew21'
-password='Internship_flake8'
-account='sr85009.west-europe.azure'
+password = os.getenv("PASSWORD")
+user = os.getenv("USER")
+account = os.getenv("ACCOUNT")
 
 def connect_to_snowflake():
     con = snowflake.connector.connect(
@@ -42,15 +41,14 @@ def create_tables_and_streams():
     schema='MY_SCHEMA'
 )
     cursor = con.cursor()
-    cursor.execute('CREATE OR REPLACE TABLE RAW_TABLE(IOS_App_Id INT, Title VARCHAR(1000), Developer_Name VARCHAR(1000), Developer_IOS_Id FLOAT, IOS_Store_Url VARCHAR(1000), Seller_Official_Website VARCHAR(1000), Age_Rating VARCHAR(1000), Total_Average_Rating VARCHAR(1000), Total_Number_of_Ratings VARCHAR (1000), Average_Rating_For_Version VARCHAR(1000), Number_of_Ratings_For_Version VARCHAR(1000), Original_Release_Date DATETIME, Current_Version_Release_Date DATETIME, Price_USD DECIMAL, Primary_Genre VARCHAR(1000), All_Genres VARCHAR(1000), Languages VARCHAR(1000), Description VARCHAR(7000));')
-    cursor.execute('CREATE OR REPLACE TABLE STAGE_TABLE(IOS_App_Id INT, Title VARCHAR(1000), Developer_Name VARCHAR(1000), Developer_IOS_Id FLOAT, IOS_Store_Url VARCHAR(1000), Seller_Official_Website VARCHAR(1000), Age_Rating VARCHAR(1000), Total_Average_Rating VARCHAR(1000), Total_Number_of_Ratings VARCHAR (1000), Average_Rating_For_Version VARCHAR(1000), Number_of_Ratings_For_Version VARCHAR(1000), Original_Release_Date DATETIME, Current_Version_Release_Date DATETIME, Price_USD DECIMAL, Primary_Genre VARCHAR(1000), All_Genres VARCHAR(1000), Languages VARCHAR(1000), Description VARCHAR(7000));')
+    cursor.execute('CREATE OR REPLACE TABLE RAW_TABLE(_id VARCHAR(), IOS_App_Id INT, Title VARCHAR(), Developer_Name VARCHAR(), Developer_IOS_Id FLOAT, IOS_Store_Url VARCHAR(), Seller_Official_Website VARCHAR(), Age_Rating VARCHAR(), Total_Average_Rating VARCHAR(), Total_Number_of_Ratings VARCHAR(), Average_Rating_For_Version VARCHAR(), Number_of_Ratings_For_Version VARCHAR(), Original_Release_Date VARCHAR(), Current_Version_Release_Date VARCHAR(), Price_USD DECIMAL, Primary_Genre VARCHAR(), All_Genres VARCHAR(), Languages VARCHAR(), Description VARCHAR());')
+    cursor.execute('CREATE OR REPLACE TABLE STAGE_TABLE(_id VARCHAR(), IOS_App_Id INT, Title VARCHAR(), Developer_Name VARCHAR(), Developer_IOS_Id FLOAT, IOS_Store_Url VARCHAR(), Seller_Official_Website VARCHAR(), Age_Rating VARCHAR(), Total_Average_Rating VARCHAR(), Total_Number_of_Ratings VARCHAR(), Average_Rating_For_Version VARCHAR(), Number_of_Ratings_For_Version VARCHAR(), Original_Release_Date VARCHAR(), Current_Version_Release_Date VARCHAR(), Price_USD DECIMAL, Primary_Genre VARCHAR(), All_Genres VARCHAR(), Languages VARCHAR(), Description VARCHAR());')
     cursor.execute('CREATE OR REPLACE STREAM RAW_STREAM ON TABLE RAW_TABLE;')
     cursor.execute('CREATE OR REPLACE STREAM STAGE_STREAM ON TABLE STAGE_TABLE;')
     cursor.close()
 
 def upload_data_to_raw():
-    df = pd.read_csv(f'{dag_path}/demo.csv', index_col=False)
-    df = df.drop(columns=["_id"], axis=1)
+    df = pd.read_csv(f'{dag_path}/763K_plus_IOS_Apps_Info.csv', index_col=False) # you can use demo.csv for test which is essentially just 100 first rows of the original data 
     df.reset_index(inplace=True, drop=True)
     df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
     con = snowflake.connector.connect(
@@ -75,8 +73,8 @@ def raw_stream_into_stage_table():
     schema='MY_SCHEMA'
 )
     cursor = con.cursor()
-    cursor.execute('''INSERT INTO STAGE_TABLE(IOS_App_Id, Title, Developer_Name, Developer_IOS_Id, IOS_Store_Url, Seller_Official_Website, Age_Rating, Total_Average_Rating, Total_Number_of_Ratings, Average_Rating_For_Version, Number_of_Ratings_For_Version, Original_Release_Date, Current_Version_Release_Date, Price_USD, Primary_Genre, All_Genres, Languages, Description)
-                    SELECT IOS_App_Id, Title, Developer_Name, Developer_IOS_Id, IOS_Store_Url, Seller_Official_Website, Age_Rating, Total_Average_Rating, Total_Number_of_Ratings, Average_Rating_For_Version, Number_of_Ratings_For_Version, Original_Release_Date, Current_Version_Release_Date, Price_USD, Primary_Genre, All_Genres, Languages, Description
+    cursor.execute('''INSERT INTO STAGE_TABLE(_id, IOS_App_Id, Title, Developer_Name, Developer_IOS_Id, IOS_Store_Url, Seller_Official_Website, Age_Rating, Total_Average_Rating, Total_Number_of_Ratings, Average_Rating_For_Version, Number_of_Ratings_For_Version, Original_Release_Date, Current_Version_Release_Date, Price_USD, Primary_Genre, All_Genres, Languages, Description)
+                    SELECT _id, IOS_App_Id, Title, Developer_Name, Developer_IOS_Id, IOS_Store_Url, Seller_Official_Website, Age_Rating, Total_Average_Rating, Total_Number_of_Ratings, Average_Rating_For_Version, Number_of_Ratings_For_Version, Original_Release_Date, Current_Version_Release_Date, Price_USD, Primary_Genre, All_Genres, Languages, Description
                     FROM RAW_TABLE;''')
     cursor.close()
 
@@ -90,10 +88,10 @@ def stage_stream_into_master_table():
     schema='MY_SCHEMA'
 )
     cursor = con.cursor()
-    cursor.execute('CREATE OR REPLACE TABLE MASTER_TABLE(IOS_App_Id INT, Title VARCHAR(1000), Developer_Name VARCHAR(1000), Developer_IOS_Id FLOAT, IOS_Store_Url VARCHAR(1000), Seller_Official_Website VARCHAR(1000), Age_Rating VARCHAR(1000), Total_Average_Rating VARCHAR(1000), Total_Number_of_Ratings VARCHAR (1000), Average_Rating_For_Version VARCHAR(1000), Number_of_Ratings_For_Version VARCHAR(1000), Original_Release_Date DATETIME, Current_Version_Release_Date DATETIME, Price_USD DECIMAL, Primary_Genre VARCHAR(1000), All_Genres VARCHAR(1000), Languages VARCHAR(1000), Description VARCHAR(7000));')
+    cursor.execute('CREATE OR REPLACE TABLE MASTER_TABLE(_id VARCHAR(), IOS_App_Id INT, Title VARCHAR(), Developer_Name VARCHAR(), Developer_IOS_Id FLOAT, IOS_Store_Url VARCHAR(), Seller_Official_Website VARCHAR(), Age_Rating VARCHAR(), Total_Average_Rating VARCHAR(), Total_Number_of_Ratings VARCHAR(), Average_Rating_For_Version VARCHAR(), Number_of_Ratings_For_Version VARCHAR(), Original_Release_Date VARCHAR(), Current_Version_Release_Date VARCHAR(), Price_USD DECIMAL, Primary_Genre VARCHAR(), All_Genres VARCHAR(), Languages VARCHAR(), Description VARCHAR());')
 
-    cursor.execute('''INSERT INTO MASTER_TABLE(IOS_App_Id, Title, Developer_Name, Developer_IOS_Id, IOS_Store_Url, Seller_Official_Website, Age_Rating, Total_Average_Rating, Total_Number_of_Ratings, Average_Rating_For_Version, Number_of_Ratings_For_Version, Original_Release_Date, Current_Version_Release_Date, Price_USD, Primary_Genre, All_Genres, Languages, Description)
-                    SELECT IOS_App_Id, Title, Developer_Name, Developer_IOS_Id, IOS_Store_Url, Seller_Official_Website, Age_Rating, Total_Average_Rating, Total_Number_of_Ratings, Average_Rating_For_Version, Number_of_Ratings_For_Version, Original_Release_Date, Current_Version_Release_Date, Price_USD, Primary_Genre, All_Genres, Languages, Description
+    cursor.execute('''INSERT INTO MASTER_TABLE(_id, IOS_App_Id, Title, Developer_Name, Developer_IOS_Id, IOS_Store_Url, Seller_Official_Website, Age_Rating, Total_Average_Rating, Total_Number_of_Ratings, Average_Rating_For_Version, Number_of_Ratings_For_Version, Original_Release_Date, Current_Version_Release_Date, Price_USD, Primary_Genre, All_Genres, Languages, Description)
+                    SELECT _id, IOS_App_Id, Title, Developer_Name, Developer_IOS_Id, IOS_Store_Url, Seller_Official_Website, Age_Rating, Total_Average_Rating, Total_Number_of_Ratings, Average_Rating_For_Version, Number_of_Ratings_For_Version, Original_Release_Date, Current_Version_Release_Date, Price_USD, Primary_Genre, All_Genres, Languages, Description
                     FROM STAGE_STREAM;''')
     cursor.close()
 
